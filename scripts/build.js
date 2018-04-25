@@ -6,7 +6,6 @@ const write = require('write');
 const options = require('./babel.json');
 const glob = bluebird.promisify(require('glob'));
 const readFile = bluebird.promisify(fs.readFile);
-const transformFile = bluebird.promisify(babel.transformFile);
 
 const minifyOptions = Object.assign({
   minified:true
@@ -14,20 +13,22 @@ const minifyOptions = Object.assign({
 
 glob(`src/**/*.js`).then(files => {
   return bluebird.all(files.map(file => {
-    return bluebird.all([
-      transformFile(file, options),
-      transformFile(file, minifyOptions)
-    ]).then((compiled) => ({
-      file:file,
-      transform: {
-        code:compiled[0].code,
-        map:compiled[0].map
-      },
-      minify: {
-        code:compiled[1].code,
-        map:compiled[1].map
-      }
-    }));
+    return readFile(file).then(content => {
+      const transformed = babel.transform(content.toString(), options);
+      const minified = babel.transform(content.toString(), minifyOptions);
+
+      return {
+        file:file,
+        transform: {
+          code:transformed.code,
+          map:transformed.map
+        },
+        minify: {
+          code:minified.code,
+          map:minified.map
+        }
+      };
+    });
   }));
 }).then(babeleds => {
   return bluebird.all(babeleds.map(babeled => {
