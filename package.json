@@ -1,7 +1,7 @@
 {
   "name": "toolbelt",
   "version": "1.0.0",
-  "description": "General functions for recurring issues",
+  "description": "Generic functions for recurring issues",
   "main": "dist/index.js",
   "scripts": {
     "build": "node scripts/build.js",
