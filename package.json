@@ -1,6 +1,6 @@
 {
   "name": "aj-toolbelt",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Generic functions for recurring issues",
   "main": "dist/index.js",
   "repository": {

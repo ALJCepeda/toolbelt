@@ -1,5 +1,5 @@
 import redtape from 'redtape';
-import toolbelt from './../index.js';
+import toolbelt from './../js/index.js';
 
 const test = redtape();
 
