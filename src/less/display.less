@@ -1,0 +1,18 @@
+@import './src/less/resources/sizes.less';
+@import './src/less/resources/mixins.less';
+
+.max-width-tablet {
+  max-width:@size-tablet;
+}
+
+.hide-up-tablet {
+  .upTo(@size-tablet, {
+    display:none;
+  });
+}
+
+.hide-down-tablet {
+  .downTo((@size-tablet - 1px), {
+    display:none;
+  });
+}
