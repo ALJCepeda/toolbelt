@@ -2,18 +2,26 @@ const babel = require('babel-core');
 const fs = require('fs');
 const write = require('write');
 const bluebird = require('bluebird');
-const readFile = bluebird.promisify(fs.readFile);
-const options = require('./babel.json');
+const less = require('less');
 
-const minifyOptions = Object.assign({
+const readFile = bluebird.promisify(fs.readFile);
+
+const babelOptions = require('./babel.json');
+const babelMinifyOptions = Object.assign({
   minified:true
-}, options);
+}, babelOptions);
+
+const lessOptions = require('./less.json');
+const lessMinifyOptions = Object.assign({
+  minified:true
+}, lessOptions);
 
 module.exports = {
   babelFile: function(file) {
     return readFile(file).then(content => {
-      const transformed = babel.transform(content.toString(), options);
-      const minified = babel.transform(content.toString(), minifyOptions);
+      const strContent = content.toString();
+      const transformed = babel.transform(strContent, babelOptions);
+      const minified = babel.transform(strContent, babelMinifyOptions);
 
       return {
         file:file,
@@ -48,5 +56,38 @@ module.exports = {
     }
 
     return bluebird.all(promises);
+  },
+  lessFile: function(file) {
+    return readFile(file).then(content => {
+      const strContent = content.toString();
+
+      return bluebird.all([
+        less.render(strContent, less),
+        less.render(strContent, lessMinifyOptions)
+      ]).then((results) => ({
+        file:file,
+        less: {
+          css:results[0].css,
+          map:results[0].map
+        },
+        minify: {
+          css:results[1].css,
+          map:results[1].map
+        }
+      }));
+    });
+  },
+  writeLessed: function(lessed) {
+    const destination = lessed.file.replace('src', 'dist').replace(/less/g, 'css');
+    const mapDestination = `${destination}.map`;
+    const minifyDestination = destination.replace('.css', '.min.css');
+    const minifyMapDestination = `${minifyDestination}.map`;
+
+    return bluebird.all([
+      write(destination, lessed.less.css),
+      write(mapDestination, JSON.stringify(lessed.less.map)),
+      write(minifyDestination, lessed.minify.css),
+      write(minifyMapDestination, JSON.stringify(lessed.minify.map))
+    ]);
   }
 };
