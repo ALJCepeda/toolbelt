@@ -14,13 +14,17 @@ rimraf('dist').then(() => {
     return bluebird.all(babeleds.map(builder.writeBabeled));
   });
 
-  const buildLess = globby(['src/**/*.less']).then(files => {
-    files = _.without(files, 'src/less/mixins.less');
+  const buildLess = globby('src/**/*.less').then(files => {
+    files = _.without(files, 'src/less/resources/mixins.less', 'src/less/resources/sizes.less');
 
     return bluebird.all(files.map(builder.lessFile));
   }).then(lessed => {
     return bluebird.all(lessed.map(builder.writeLessed));
   });
 
-  return bluebird.all([ buildJS, buildLess ]);
+  const copyLess = globby('src/**/*.less').then(files => {
+    return bluebird.all(files.map(builder.copyFile));
+  });
+
+  return bluebird.all([ buildJS, buildLess, copyLess ]);
 })

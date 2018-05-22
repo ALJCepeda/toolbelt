@@ -17,6 +17,14 @@ const lessMinifyOptions = Object.assign({
 }, lessOptions);
 
 module.exports = {
+  copyFile: function(file) {
+    return readFile(file).then(content => {
+      const strContent = content.toString();
+
+      const destination = file.replace('src', 'dist');
+      return write(destination, strContent);
+    });
+  },
   babelFile: function(file) {
     return readFile(file).then(content => {
       const strContent = content.toString();
