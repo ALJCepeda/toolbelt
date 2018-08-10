@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _ from '_';
 
 export default {
   // http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array

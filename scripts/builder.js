@@ -70,7 +70,7 @@ module.exports = {
       const strContent = content.toString();
 
       return bluebird.all([
-        less.render(strContent, less),
+        less.render(strContent, lessOptions),
         less.render(strContent, lessMinifyOptions)
       ]).then((results) => ({
         file:file,

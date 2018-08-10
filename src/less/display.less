@@ -1,5 +1,5 @@
-@import './src/less/resources/sizes.less';
-@import './src/less/resources/mixins.less';
+@import 'resources/sizes.less';
+@import 'resources/mixins.less';
 
 .max-width-tablet {
   max-width:@size-tablet;
@@ -15,4 +15,10 @@
   .downTo((@size-tablet + 1px), {
     display:none;
   });
+}
+
+.content {
+  max-width:750px;
+  margin:0 auto;
+  font-size:1.2em;
 }
