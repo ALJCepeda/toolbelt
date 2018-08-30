@@ -1,5 +1,3 @@
-import _ from '_';
-
 export default {
   // http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
   shuffle: function(array) {
@@ -24,7 +22,7 @@ export default {
   findMissingIndexes: function(array, start, end) {
     const missing = [];
     for(let i=start; i<end; i++) {
-      if(_.isUndefined(array[i]) || _.isNull(array[i])) {
+      if(array[i] === undefined || array[i] === null) {
         missing.push(i);
       }
     }
@@ -60,5 +58,8 @@ export default {
 			}
 			return result;
 		};
-	}
+	},
+  isNil(value) {
+    return value === null || value === undefined;
+  }
 };
