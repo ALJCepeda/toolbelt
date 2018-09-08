@@ -1,4 +1,6 @@
 import redtape from 'redtape';
+import sinon from 'sinon';
+
 import Check from './../js/check';
 
 let check;
@@ -202,5 +204,139 @@ should('validate subclass of class', (t) => {
   t.true(check.is(inst, Exam));
   t.true(check.is(inst, Test));
   t.false(check.is(inst, Object));
+  t.end();
+});
+
+should('record errors when provided in check', (t) => {
+  check.register('name', (name) => [
+    { assert:name.length > 3, error:'Name must be great than 3 characters' },
+    { assert:name === name.toLowerCase(), error:'Name must be in all lowercase' }
+  ]);
+
+  check.register('age', (age) => [
+    { assert:age > 18, error:'You must be 18 years or older' }
+  ]);
+
+  const result = check.is({
+    name:'No',
+    age:15
+  }, {
+    name:'name',
+    age:'age'
+  });
+
+  t.false(result);
+  t.deepEqual(check.errors, [
+    'Name must be great than 3 characters',
+    'Name must be in all lowercase',
+    'You must be 18 years or older'
+  ]);
+  t.end();
+});
+
+should('handle individual errors in check tests', (t) => {
+  const nameError = sinon.spy();
+  const ageError = sinon.spy();
+
+  const result = check.is({
+    name:'No',
+    age:15
+  }, {
+    name:(name) => [
+      { assert:name > 3, error:nameError },
+      { assert:name === name.toLowerCase(), error:nameError }
+    ],
+    age:(age) => [
+      { assert:age > 18, error:ageError }
+    ]
+  });
+
+  t.false(result);
+  t.equal(nameError.callCount, 2);
+  t.equal(ageError.callCount, 1);
+  t.end();
+})
+
+should('record override registered errors', (t) => {
+  check.register('name', (name) => [
+    { assert:name.length > 3, error:'Name must be great than 3 characters' },
+    { assert:name === name.toLowerCase(), error:'Name must be in all lowercase' }
+  ]);
+
+  check.register('age', (age) => [
+    { assert:age > 18, error:'You must be 18 years or older' }
+  ]);
+
+  const result = check.is({
+    name:'No',
+    age:15
+  }, {
+    name:{ assert:'name', error:[
+      'Your must enter a name that\'s greater than 3 characters',
+      'You cannot have any uppercase characters'
+    ]},
+    age:{ assert:'age', error:(index, id) => {
+      if(index === 0) {
+        return 'You must be at least 18 years old'
+      }
+    }}
+  });
+
+  t.false(result);
+  t.deepEqual(check.errors, [
+    'Name must be great than 3 characters',
+    'Name must be in all lowercase',
+    'You must be 18 years or older'
+  ]);
+  t.end();
+});
+
+should('call back with errors', (t) => {
+  const errorCB = sinon.spy();
+  const result = check.is('No', (name) => [
+    { assert:name.length > 3, error:'Name must be great than 3 characters' },
+    { assert:name === name.toLowerCase(), error:'Name must be in all lowercase' }
+  ], errorCB);
+
+  t.false(result);
+  t.deepEqual(check.errors, [
+    'Name must be great than 3 characters',
+    'Name must be in all lowercase',
+  ]);
+  t.equal(errorCB.callCount, 1);
+  t.deepEqual(errorCB.firstCall.args, [
+    [
+      'Name must be great than 3 characters',
+      'Name must be in all lowercase',
+    ]
+  ]);
+  t.end();
+});
+
+should('override registered errors by index', (t) => {
+  check.register('name', (name) => [
+    { assert:name.length > 3, error:'Name must be great than 3 characters' },
+    { assert:name === name.toLowerCase(), error:'Name must be in all lowercase' }
+  ]);
+
+  const result = check.is({
+    name:'No',
+    age:15
+  }, {
+    name:{
+      assert:'name',
+      error:(value, index, type) => {
+        if(index === 0) {
+          return 'Error in first index is replaced'
+        }
+      }
+    }
+  });
+
+  t.false(result);
+  t.deepEqual(check.errors, [
+    'Error in first index is replaced',
+    'Name must be in all lowercase'
+  ]);
   t.end();
 });
