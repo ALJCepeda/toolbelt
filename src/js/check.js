@@ -95,7 +95,7 @@ class Check {
     return type.assert(value).every(test => test === true);
   }
 
-  runTests(value, type, startTest) {
+  runAssertions(value, type, startTest) {
     const getError = function({error, value, index, type}) {
       if(isFunction(error)) {
         error = error(value, index, type);
@@ -123,11 +123,9 @@ class Check {
 
           if(isObject(startTest) && !isNil(startTest.error)) {
             errorStr = getError({ error:startTest.error, value, index, type });
+          }
 
-            if(isNull(errorStr)) {
-              errorStr = getError({ error:test.error, value, index, type });
-            }
-          } else {
+          if(isNull(errorStr)) {
             errorStr = getError({ error:test.error, value, index, type });
           }
 
@@ -144,11 +142,9 @@ class Check {
   }
 
   isType(value, datatype, startTest) {
-    debugger;
     if(isArray(datatype)) {
       return this.assertArray(value, datatype, startTest);
     } else if(isObject(datatype)) {
-      debugger;
       return this.assertObject(value, datatype, startTest);
     } else if(this.types.has(datatype)) {
       const type = this.types.get(datatype);
@@ -158,15 +154,23 @@ class Check {
         return false;
       }
 
-      return this.runTests(value, type, startTest).every(test => test === true);
+      return this.runAssertions(value, type, startTest).every(test => test === true);
+    } else if(isObject(value) && isUndefined(datatype)) {
+      return this.assertObjectValue(value, startTest);
     }
   }
 
   is(value, datatype, errorCB) {
     this.errors = [];
-    const isValid = this._is(value, datatype);
+    let isValid = true;
 
-    if(isFunction(errorCB)) {
+    if(arguments.length === 1) {
+      isValid = this._is(value);
+    } else {
+      isValid = this._is(value, datatype);
+    }
+
+    if(this.errors.length > 0 && isFunction(errorCB)) {
       errorCB(this.errors);
     }
 
@@ -174,13 +178,12 @@ class Check {
   }
 
   _is(value, datatype, startTest) {
-    const hasStandard = this.standards.has(datatype);
-
     if(this.standards.has(value)) {
       //Standard types can only be themselves
       return value === datatype;
     }
 
+    const hasStandard = this.standards.has(datatype);
     if(!hasStandard && isFunction(datatype)) {
       //Have a function or a constructor
       if(value instanceof datatype) {
@@ -190,14 +193,14 @@ class Check {
 
       try {
         //Run tests assuming it's a function
-        return this.runTests(value, { assert:datatype }, startTest).every(test => test === true);
+        return this.runAssertions(value, { assert:datatype }, startTest).every(test => test === true);
       } catch(error) {
         //Was actually a constructor
         return false;
       }
     }
 
-    if(hasStandard) {
+    if(hasStandard && !(datatype === undefined && arguments.length === 1)) {
       return this.isStandard(value, datatype);
     }
 
@@ -212,6 +215,21 @@ class Check {
   assertArray(value, arr, startTest) {
     const type = arr[0];
     return value.map(entry => this._is(entry, type, startTest)).every(test => test === true);
+  }
+
+  assertObjectValue(value, startTest) {
+    if(!isObject(value)) {
+      return false;
+    }
+
+    const tests = [];
+    debugger;
+    for(let key in value) {
+      const isValid = this._is(value[key], key, startTest);
+      tests.push(isValid);
+    }
+
+    return tests.every(test => test === true);
   }
 
   assertObject(value, obj, startTest) {

@@ -10,6 +10,6 @@ const runTests = (tests, solo) => {
 };
 
 runTests([
-  'index-test.js',
+  'util-test.js',
   'check-tests.js'
 ], 'check-tests.js');

@@ -47,6 +47,7 @@ module.exports = {
   writeBabeled: function(babeled) {
     const destination = babeled.file.replace('src', 'dist');
     const mapDestination = `${destination}.map`;
+    const rootDestination = babeled.file.replace('src/js/', '');
 
     let promises = [
       write(destination, babeled.transform.code),
@@ -59,7 +60,8 @@ module.exports = {
 
       promises = promises.concat([
           write(minifyDestination, babeled.minify.code),
-          write(minifyMapDestination, JSON.stringify(babeled.minify.map))
+          write(minifyMapDestination, JSON.stringify(babeled.minify.map)),
+          write(rootDestination, babeled.transform.code)
       ]);
     }
 

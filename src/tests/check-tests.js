@@ -340,3 +340,19 @@ should('override registered errors by index', (t) => {
   ]);
   t.end();
 });
+
+should('attempt to use key if no registered type is given', (t) => {
+  check.register('name', (name) => [
+    { assert:name.length > 3, error:'Name must be great than 3 characters' },
+    { assert:name === name.toLowerCase(), error:'Name must be in all lowercase' }
+  ]);
+
+  const result = check.is({ name:'No' });
+
+  t.false(result);
+  t.deepEqual(check.errors, [
+    'Name must be great than 3 characters',
+    'Name must be in all lowercase',
+  ]);
+  t.end();
+});
